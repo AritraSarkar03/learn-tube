@@ -1,0 +1,32 @@
+import  express  from "express";
+import { config } from 'dotenv';
+import course from './routers/courseRoutes.js'
+import user from './routers/userRoute.js'
+import ErrorMiddleWare from "./middlewares/Error.js";
+import cookieParser from "cookie-parser";
+import payment from "./routers/paymentRoutes.js";
+import other from "./routers/otherRoutes.js";
+
+config({
+    path:"./config/.env"
+});
+
+const app =  express();
+
+//Middlewares
+app.use(express.json());
+app.use(express.urlencoded({
+    extended: true,
+}));
+app.use(cookieParser());
+
+
+
+app.use('/api/v1', course);
+app.use('/api/v1', user);
+app.use('/api/v1', payment);
+app.use('/api/v1', other);
+
+export default app;
+
+app.use(ErrorMiddleWare);
