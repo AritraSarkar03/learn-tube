@@ -168,7 +168,7 @@ const serviceAccount = {
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  storageBucket: 'gs://your-storage-bucket-url' // Replace with your Firebase Storage bucket URL
+  storageBucket: process.env.STORAGE_BUCKET
 });
 
 const storage = admin.storage();
