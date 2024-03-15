@@ -65,10 +65,15 @@ schema.pre("save", async function (next) {
 });
 
 schema.methods.getJWTToken = function () {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET not defined in environment variables.');
+  }
+
   return jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: "15d",
+    expiresIn: '15d',
   });
 };
+
 
 schema.methods.comparePassword = async function (password) {
   console.log(this.password);

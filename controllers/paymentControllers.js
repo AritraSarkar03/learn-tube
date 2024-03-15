@@ -30,8 +30,7 @@ export const createSubscription = CatchAsyncError(async (req, res, next) => {
 });
 
 export const paymentVerification = CatchAsyncError(async (req, res, next) => {
-  const { razorpay_signature, razorpay_payment_id, razorpay_subscription_id } =
-    req.body;
+    const {razorpay_payment_id, razorpay_subscription_id, razorpay_signature } = req.body;
 
   const user = await User.findById(req.user._id);
 
@@ -39,11 +38,11 @@ export const paymentVerification = CatchAsyncError(async (req, res, next) => {
 
   const generated_signature = crypto
     .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
-    .update(razorpay_payment_id + "|" + subscription_id, "utf-8")
+    .update(razorpay_payment_id + "|" + razorpay_subscription_id, "utf-8")
     .digest("hex");
-
+console.log('generated signature:', generated_signature);
+console.log('razorpay signature:', razorpay_signature);
   const IsAuthentic = generated_signature === razorpay_signature;
-
   if (!IsAuthentic)
     return res.redirect(`${process.env.FRONTEND_URL}/paymentfailed`);
 
@@ -54,7 +53,7 @@ export const paymentVerification = CatchAsyncError(async (req, res, next) => {
   });
 
   user.subscription.status = "active";
-  await User.save();
+  await user.save();
 
   res.redirect(
     `${process.env.FRONTEND_URL}/paymentsuccess?reference=${razorpay_payment_id}`
@@ -62,7 +61,7 @@ export const paymentVerification = CatchAsyncError(async (req, res, next) => {
 });
 
 export const getRazorPayKey = CatchAsyncError(async (req, res, next) => {
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     key: process.env.RAZORPAY_API_KEY,
   });

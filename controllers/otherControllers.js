@@ -23,18 +23,20 @@ export const contact = CatchAsyncError(async (req, res, next) => {
 
 export const courseRequest = CatchAsyncError(async (req, res, next) => {
   const { name, email, course } = req.body;
-
-  if (!name || !email || !course)
+  
+  if (!name || !email || !course){
+    console.log("Please enter all fields");
     return next(new ErrorHandler("Please enter all fields", 400));
+  }
+
 
   const to = process.env.MY_MAIL;
   const subject = "Requesting for a new course";
   const text = `I am ${name} and my Email is ${email}. \n${course}`;
 
   await sendEmail(to, subject, text);
-
   res.status(200).json({
-    success: true,
+    success: true, 
     message: "Your request has been sent.",
   });
 });

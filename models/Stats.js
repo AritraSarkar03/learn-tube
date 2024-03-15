@@ -24,3 +24,5 @@ const schema = new mongoose.Schema({
 });
 
 export const Stats = mongoose.model("Stats", schema);
+
+

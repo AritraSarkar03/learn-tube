@@ -12,8 +12,8 @@ import { Stats } from "../models/Stats.js";
 export const register = CatchAsyncError(async (req, res, next) => {
   const { name, email, password } = req.body;
 
+  console.log(req.body); 
   const file = req.file;
-
   if (!name || !email || !password || !file)
     return next(new ErrorHandler("Please add all fields", 400));
 
@@ -21,18 +21,18 @@ export const register = CatchAsyncError(async (req, res, next) => {
 
   if (user) return next(new ErrorHandler("User already exist", 409));
 
-  const fileUri = getDataUri(file);
-  const mycloud = await cloudinary.uploader.upload(fileUri.content);
+   const fileUri = getDataUri(file);
+   const mycloud = await cloudinary.uploader.upload(fileUri.content);
 
-  user = await User.create({
-    name,
+   user = await User.create({
+     name,
     password,
     email,
     avatar: {
       public_id: mycloud.public_id,
-      url: mycloud.secure_url,
+       url: mycloud.secure_url,
     },
-  });
+   });
 
   sendToken(res, user, "Register Succesfully", 201);
 });
@@ -61,6 +61,9 @@ export const logout = CatchAsyncError(async (req, res, next) => {
     .status(200)
     .cookie("token", null, {
       expires: new Date(Date.now()),
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
     })
     .json({
       success: true,
@@ -139,6 +142,7 @@ export const updateProfilePic = CatchAsyncError(async (req, res, next) => {
 });
 
 export const forgetPassword = CatchAsyncError(async (req, res, next) => {
+ 
   const { email } = req.body;
 
   if (!email) return next(new ErrorHandler("Please add Email", 400));
@@ -163,27 +167,26 @@ export const forgetPassword = CatchAsyncError(async (req, res, next) => {
 
 export const resetPassword = CatchAsyncError(async (req, res, next) => {
   const { token } = req.params;
-
   const resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hex");
-
+  .createHash("sha256")
+  .update(token)
+  .digest("hex");
+  
   const user = await User.findOne({
     resetPasswordToken,
     resetPasswordExpire: {
       $gt: Date.now(),
     },
   });
-
+  
   if (!user) return next(new ErrorHandler("Token expired", 409));
-
-  user.password = req.body.password;
+  
+  user.password = req.body.Password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
-
+  
   await user.save();
-
+  
   res.status(200).json({
     success: true,
     message: "Password changed successfully",
@@ -304,5 +307,7 @@ User.watch().on("change", async () => {
   stats[0].users = await User.countDocuments();
   stats[0].createdAt = new Date(Date.now());
 
-  await stats.save();
+  // Use updateOne to update the existing document
+  await Stats.updateOne({ _id: stats[0]._id }, stats[0]);
 });
+

@@ -28,7 +28,7 @@ router.route("/login").post(login);
 router.route("/logout").get(logout);
 
 router.route("/me").get(IsAuthenticated, getMyProfile);
-
+ 
 router.route("/me").delete(IsAuthenticated, deleteMyProfile);
 
 router.route("/changepassword").put(IsAuthenticated, changePassword);
@@ -39,9 +39,9 @@ router
   .route("/updateprofilepic")
   .put(IsAuthenticated, singleUpload, updateProfilePic);
 
-router.route("/resetpassword/:token").put(IsAuthenticated, resetPassword);
+router.route("/resetpassword/:token").put(resetPassword);
 
-router.route("/forgetpassword").put(IsAuthenticated, forgetPassword);
+router.route("/forgetpassword").put(forgetPassword);
 
 router.route("/addtoplaylist").post(IsAuthenticated, addtoplaylist);
 

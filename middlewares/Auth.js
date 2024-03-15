@@ -21,7 +21,7 @@ export const authorizeAdmin = (req, res, next) => {
       new ErrorHandler(`Only admin can access this resource`, 403)
     );
 
-  next();
+  next(); 
 };
 
 export const authorizeSubscribers = (req, res, next) => {

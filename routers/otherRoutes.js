@@ -10,4 +10,4 @@ router.route("/courserequest").post(courseRequest);
 
 router.route("/admin/stats").get(IsAuthenticated, authorizeAdmin, getDashboardStat);
 
-export default router;
+export default router;     
