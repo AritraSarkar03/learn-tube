@@ -152,21 +152,23 @@ export const deleteCourse = CatchAsyncError(async (req, res, next) => {
   });
 });
 
+const serviceAccount = {
+  type: process.env.FIREBASE_TYPE,
+  project_id: process.env.FIREBASE_PROJECT_ID,
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+  private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Replace newlines
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  client_id: process.env.FIREBASE_CLIENT_ID,
+  auth_uri: process.env.FIREBASE_AUTH_URI,
+  token_uri: process.env.FIREBASE_TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
+  client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+  universe_domain: process.env.FIREBASE_UNIVERSE_DOMAIN
+};
+
 admin.initializeApp({
-  credential: admin.credential.cert({
-    "type": "service_account",
-    "project_id": "lucky-essence-416908",
-    "private_key_id": "47a61257b020e14f40e43a27e057012d95234f30",
-    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCTs6pbxN2l91Kt\ntOkn7AGU9mnXcUDtilfqogrWhops+mEBAqmdZ9PIJMATwYYTNjxS1qCzvp46D/Gl\ndAsCRsM13KttksHb1vpcMh2QldZKEyGhldByor56zPfALVkko51nPBLtNfFJ/Klf\n6vVYb+esZU2i1mQf7eoe3GQQgufTLjyS6cbDGfsM6wskHC8w7MfGUjQyA/yoPZ61\nIEh6FHAubG/Mirqr+HEoXGBIqaoVfdCT+L31sO5qPK91wAZD0b+GeWMD6Fd5EzE4\n6v/zayXi3TCHQEyJFgZnO9WBfHOvrrV7HfYPIrsRqyDCV3+huqybQZqx4hvs5JpT\nvczBFPtbAgMBAAECggEAKa8BS4/WG9IeR76wNF+THLakLTSdpcwuvp2HoH5sz4+j\n07SsKKuWJbxVZt3tWDusr5Y52TBZGDrKsC59MuHEks1Zpf1Ob5wOoPlVxam7xcD7\nc05D+y45wo9Y9if2KfRw5iMalk5sb7x6EoNNRW2jfNBEJkoKDMbIlXgOV2iSQ1Mx\nvA4FRMZmO2anU3HI8lE9YaNLV6JU4TJD7bqDzrDvnKAPiw591Jwnw7fMzYgTiSda\n/98jZLXzZMtPvEQh11EOqdpbOKPdd49oIod5cfOwNQY/pyhEL6G11rNIS2zizUsu\n3LzmsqOcOJ6QppQLE+kOZGPjx0KiAbYjHP+P6wRgEQKBgQDOOBxMJDUOV7wPFuVK\n103koRgv1aTrLPCfeZ7HsvhX+4iDkC8w3WrXblTI+esjd6cu3gCscUQT+RMWdkdf\n+VD/9bJ7RDZoVf/5qOWGTlCXfkcCbsNug0ABkKLkH9khzb9B+pb3KSrR679K29gU\nZqU+DuzleEF6pp8rlqgxkKJtMQKBgQC3W0+twL9cCQrEE5DlW+wx0EfdjRN+wCpp\nu9JQfWiseMr+EYvWuJSVymVfMNXHNA76I538d4cBOodGRl/ruB6n7Q5WtPXC76gf\n/Cd/SUeCn/ydyd7vM34e6M+Pc7ZLAgbB8rwAYPbI3D9Zger9lNeSQJaBtMDM14MM\nky1/ThdeSwKBgQC9BRNy+1EiZ2q6Dgt38Se1o6+O0O5MnjGki47tju8xfh5gMT4A\nNUPkWX4fhWxxYxB71gOaDGwRPqGvWhUMNHN5WhUSBbE1K3bouVZBJ/GZGqct5Kb/\n2hBGHvQf081rvbJMYMwVmsdkCQmbLS2/bWKTIo0jvHmQWb/V7U8Xt3IaUQKBgHX4\nY/2RBA39K1YYmKNZT1CFh5d+S0rD7QX2eEydQ5mkZkatl2FhhQgTHsHuM71lOzWp\ncN6dMNmThLGsWc7Zua+lkBItf+oaM/vQSsFUrpPWx7vlxG/2m3DbrZ/IfUMpXJuw\nx1EfEekN/BxkwILDHyfUMoHlgB7Lkl+m2iEMZ3CdAoGAJXxof/IGy6Vru+GAHddP\n6D8oOWk/tQ4d+wHKF2tXjG5RxDne0TxJzrAVQNc4WO8HBNgowZNo+Gc8/MtahOB5\nuKQhLqolcf0XdmDRZqa2kKgiomQN6o8NHftqsSIcsQ3peOOx5ipduj9YN0LMT5lc\n6qCOHw2p4+GLq8vUavCvlH8=\n-----END PRIVATE KEY-----\n",
-    "client_email": "firebase-adminsdk-oas0s@lucky-essence-416908.iam.gserviceaccount.com",
-    "client_id": "100932942594989244085",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-oas0s%40lucky-essence-416908.iam.gserviceaccount.com",
-    "universe_domain": "googleapis.com"
-  }), // Provide the path to your service account key file
-  storageBucket: 'gs://lucky-essence-416908.appspot.com' // Replace with your Firebase Storage bucket URL
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: 'gs://your-storage-bucket-url' // Replace with your Firebase Storage bucket URL
 });
 
 const storage = admin.storage();
