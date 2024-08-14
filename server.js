@@ -6,6 +6,7 @@ import nodeCron from "node-cron";
 import { Stats } from "./models/Stats.js"
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes } from "firebase/storage";
+import admin from "firebase-admin";
 
 
 
@@ -18,17 +19,39 @@ cloudinary.config({
 });
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBSj-7jYSz1F5QXaMD9G_2wSUmP572tMq8",
-    authDomain: "lucky-essence-416908.firebaseapp.com",
-    projectId: "lucky-essence-416908",
-    storageBucket: "lucky-essence-416908.appspot.com",
-    messagingSenderId: "107695337771",
-    appId: "1:107695337771:web:102624724dddd494c2556e",
-    measurementId: "G-4TVX1HWQVB"
+    apiKey: process.env.API_KEY,
+    authDomain: process.env.AUTH_DOMAIN,
+    projectId: process.env.PROJECT_ID,
+    storageBucket: process.env.STORAGE_BUCKET,
+    messagingSenderId: process.env.MESSAGING_SENDER_ID,
+    appId: process.env.APP_ID,
+    measurementId: process.env.MEASUREMENT_ID,
 };
 
 // Initialize Firebase
 initializeApp(firebaseConfig);
+
+const serviceAccount = {
+    type: process.env.FIREBASE_TYPE,
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+    private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    client_id: process.env.FIREBASE_CLIENT_ID,
+    auth_uri: process.env.FIREBASE_AUTH_URI,
+    token_uri: process.env.FIREBASE_TOKEN_URI,
+    auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
+    client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+  };
+  
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: process.env.STORAGE_BUCKET,
+  });
+  
+  const storage = getStorage();
+  
+  export { admin, storage };
 
 
 

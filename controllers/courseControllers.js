@@ -4,9 +4,8 @@ import getDataUri from "../utils/dataUri.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import cloudinary from "cloudinary";
 import { Stats } from "../models/Stats.js";
-import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
-import admin from 'firebase-admin';
-
+import { admin } from "../server.js";
+import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
 
 export const getAllCourses = CatchAsyncError(async (req, res, next) => {
   const keyword = req.query.keyword || "";
@@ -87,43 +86,41 @@ export const addLectures = CatchAsyncError(async (req, res, next) => {
 
   const rawFile = req.file;
   const file = getDataUri(rawFile);
-  const storage = getStorage();
 
-  const filePath = `lectures/${rawFile.originalname}`;
-  
-  const storageRef = ref(storage, filePath);
+  if (!file || !file.content) {
+    return next(new ErrorHandler("File processing error", 400));
+  }
 
-  uploadString(storageRef, file.content, "data_url")
-    .then((snapshot) => {
-      console.log("Uploaded a blob or file:", snapshot);
-      
-      return getDownloadURL(snapshot.ref);
-    })
-    .then((downloadURL) => {
-      console.log("File download URL:", downloadURL);
+  try {
+    const storage = getStorage();
+    const filePath = `lectures/${rawFile.originalname}`;
+    const storageRef = ref(storage, filePath);
 
-      course.lectures.push({
-        title,
-        description,
-        video: { 
-          url: downloadURL,
-        },
-      });
+    const snapshot = await uploadString(storageRef, file.content, "data_url");
+    const downloadURL = await getDownloadURL(snapshot.ref);
 
-      course.numOfVideos = course.lectures.length;
+    console.log("File download URL:", downloadURL);
 
-      return course.save();
-    })
-    .then(() => {
-      res.status(201).json({
-        success: true,
-        message: "Lectures added successfully",
-      });
-    })
-    .catch((error) => {
-      console.error("Error uploading file:", error);
-      next(error);
+    course.lectures.push({
+      title,
+      description,
+      video: { 
+        url: downloadURL,
+      },
     });
+
+    course.numOfVideos = course.lectures.length;
+
+    await course.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Lectures added successfully",
+    });
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    next(error);
+  }
 });
 
 
@@ -152,47 +149,30 @@ export const deleteCourse = CatchAsyncError(async (req, res, next) => {
   });
 });
 
-const serviceAccount = {
-  type: process.env.FIREBASE_TYPE,
-  project_id: process.env.FIREBASE_PROJECT_ID,
-  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-  private_key: process.env.FIREBASE_PRIVATE_KEY,
-  client_email: process.env.FIREBASE_CLIENT_EMAIL,
-  client_id: process.env.FIREBASE_CLIENT_ID,
-  auth_uri: process.env.FIREBASE_AUTH_URI,
-  token_uri: process.env.FIREBASE_TOKEN_URI,
-  auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
-  client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
-  universe_domain: process.env.FIREBASE_UNIVERSE_DOMAIN
-};
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: process.env.STORAGE_BUCKET
-});
-
-const storage = admin.storage();
-
 export const deleteLecture = CatchAsyncError(async (req, res, next) => {
   const { courseId, lectureId } = req.query;
 
   const course = await Course.findById(courseId);
-
   if (!course) return next(new ErrorHandler("Course not found", 404));
 
   const singleLecture = course.lectures.find(lecture => lecture._id.toString() === lectureId.toString());
-
   if (!singleLecture) return next(new ErrorHandler("Lecture not found", 404));
 
-
   try {
-    await storage.bucket().file(singleLecture.video.public_id).delete();
+    // Ensure the storage instance is properly initialized
+    const storage = getStorage();
+    const videoRef = ref(storage, singleLecture.video.url);
+    console.log('Video Reference:', videoRef); // Debugging info
+
+    // Attempt to delete the video
+    await deleteObject(videoRef);
+    console.log('Video deleted successfully'); // Debugging info
   } catch (error) {
-    return next(new ErrorHandler("Failed to delete video from Firebase Storage", 500));
+    console.error('Error deleting video:', error); // Log the actual error
+    return next(new ErrorHandler("Failed to delete video", 500));
   }
 
   course.lectures = course.lectures.filter(lecture => lecture._id.toString() !== lectureId.toString());
-
   course.numOfVideos = course.lectures.length;
 
   await course.save();
@@ -202,6 +182,7 @@ export const deleteLecture = CatchAsyncError(async (req, res, next) => {
     message: "Lecture deleted successfully",
   });
 });
+
 
 
  Course.watch().on("change", async () => {
