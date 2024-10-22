@@ -34,6 +34,6 @@ app.use('/api/v1', other);
 
 export default app;
 
-app.get("/",(req,res)=>res.send(`<h1>Server is working. Click <a href=${process.env.FRONTEND_URL}>here</a> to visit frontend.</h1>`))
+app.get("/", (req, res) => {res.redirect(process.env.FRONTEND_URL)});
 
 app.use(ErrorMiddleWare);
