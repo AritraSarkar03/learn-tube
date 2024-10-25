@@ -67,7 +67,8 @@ export const getCourseLectures = CatchAsyncError(async (req, res, next) => {
 
   if (!course) return next(new ErrorHandler("Course not found", 404));
 
-  course.views += 1;
+  const user = await User.findById(req.user._id);
+  if(user.role !== 'admin') course.views += 1;
 
   await course.save();
 
