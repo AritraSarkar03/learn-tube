@@ -1,3 +1,4 @@
+import { User } from '../models/User.js'  // Import the User model
 import { CatchAsyncError } from "../middlewares/CatchAsyncError.js";
 import { Course } from "../models/Course.js";
 import getDataUri from "../utils/dataUri.js";
@@ -67,7 +68,8 @@ export const getCourseLectures = CatchAsyncError(async (req, res, next) => {
 
   if (!course) return next(new ErrorHandler("Course not found", 404));
 
-  const user = req.user;
+  const user = await User.findById(req.user._id);
+
   if(user.role !== 'admin') course.views += 1;
 
   await course.save();
@@ -78,6 +80,9 @@ export const getCourseLectures = CatchAsyncError(async (req, res, next) => {
   });
 });
 
+import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { v4 as uuidv4 } from 'uuid'; // For unique filenames
+import crypto from 'crypto'; // To create a hash
 
 export const addLectures = CatchAsyncError(async (req, res, next) => {
   const { title, description } = req.body;
@@ -92,8 +97,18 @@ export const addLectures = CatchAsyncError(async (req, res, next) => {
   }
 
   try {
+    // Generate a hash of the file content for duplicate checking
+    const fileBuffer = Buffer.from(file.content.split(',')[1], 'base64');
+    const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+    // Check if a lecture with this hash already exists
+    const existingLecture = course.lectures.find(lecture => lecture.video && lecture.video.hash === fileHash);
+    if (existingLecture) {
+      return next(new ErrorHandler("This video has already been uploaded.", 400));
+    }
+
     const storage = getStorage();
-    const filePath = `lectures/${rawFile.originalname}`;
+    const filePath = `lectures/${uuidv4()}_${rawFile.originalname}`;
     const storageRef = ref(storage, filePath);
 
     const snapshot = await uploadString(storageRef, file.content, "data_url");
@@ -106,6 +121,7 @@ export const addLectures = CatchAsyncError(async (req, res, next) => {
       description,
       video: { 
         url: downloadURL,
+        hash: fileHash,
       },
     });
 
@@ -122,8 +138,6 @@ export const addLectures = CatchAsyncError(async (req, res, next) => {
     next(error);
   }
 });
-
-
 
 export const deleteCourse = CatchAsyncError(async (req, res, next) => {
   const { id } = req.params;
@@ -183,18 +197,14 @@ export const deleteLecture = CatchAsyncError(async (req, res, next) => {
   });
 });
 
-
-
- Course.watch().on("change", async () => {
-   const stats = await Stats.find({}).sort({ createdAt: "desc" }).limit(1);
-   const courses = await Course.find({});
-   let totalViews = 0;
-   for (let i = 0; i < courses.length; i++) {
-     totalViews += courses[i].views;
-   }
-   stats[0].views = totalViews;
-   stats[0].createdAt = new Date(Date.now());
-   await stats[0].save();
- });
-
-
+Course.watch().on("change", async (change) => {
+    const stats = await Stats.find({}).sort({ createdAt: "desc" }).limit(1);
+    const courses = await Course.find({});
+    let totalViews = 0;
+    for (let i = 0; i < courses.length; i++) {
+      totalViews += courses[i].views;
+    }
+    stats[0].views = totalViews;
+    stats[0].createdAt = new Date(Date.now());
+    await stats[0].save();
+});
