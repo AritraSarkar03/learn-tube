@@ -67,7 +67,7 @@ export const getCourseLectures = CatchAsyncError(async (req, res, next) => {
 
   if (!course) return next(new ErrorHandler("Course not found", 404));
 
-  const user = await User.findById(req.user._id);
+  const user = req.user;
   if(user.role !== 'admin') course.views += 1;
 
   await course.save();
@@ -77,7 +77,6 @@ export const getCourseLectures = CatchAsyncError(async (req, res, next) => {
     lectures: course.lectures,
   });
 });
-//max video size 100mb
 
 
 export const addLectures = CatchAsyncError(async (req, res, next) => {
