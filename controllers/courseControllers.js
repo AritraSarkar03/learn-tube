@@ -1,11 +1,12 @@
-import { User } from '../models/User.js'  // Import the User model
+import { User } from '../models/User.js'
 import { CatchAsyncError } from "../middlewares/CatchAsyncError.js";
 import { Course } from "../models/Course.js";
 import getDataUri from "../utils/dataUri.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import cloudinary from "cloudinary";
 import { Stats } from "../models/Stats.js";
-import { admin } from "../server.js";
+import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { getStorage, ref, uploadString, getDownloadURL, deleteObject } from "firebase/storage";
 
 export const getAllCourses = CatchAsyncError(async (req, res, next) => {
