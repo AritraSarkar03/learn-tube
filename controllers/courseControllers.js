@@ -81,10 +81,6 @@ export const getCourseLectures = CatchAsyncError(async (req, res, next) => {
   });
 });
 
-import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
-import { v4 as uuidv4 } from 'uuid'; // For unique filenames
-import crypto from 'crypto'; // To create a hash
-
 export const addLectures = CatchAsyncError(async (req, res, next) => {
   const { title, description } = req.body;
   const course = await Course.findById(req.params.id);
